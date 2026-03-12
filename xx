@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Open Tabs Every Second</title>
+</head>
+<body>
+  <h1>Opening a tab every 1 second...</h1>
+  <button id="startBtn">Start</button>
+
+  <script>
+    const url = "https://www.youtube.com/shorts/QWbRqEHH5Ng";
+    let interval;
+
+    document.getElementById("startBtn").addEventListener("click", () => {
+      if (!interval) {
+        interval = setInterval(() => {
+          window.open(url, "_blank");
+        }, 1000); // 1000 ms = 1 second
+      }
+    });
+  </script>
+</body>
+</html>
