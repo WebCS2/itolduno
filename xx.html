@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIF Display with Looping Audio</title>
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #000; /* optional: black background for better GIF contrast */
+        }
+
+        img {
+            width: 100%; /* scales the GIF more */
+            height: auto; /* keeps aspect ratio */
+        }
+
+        audio {
+            display: none; /* hides the audio player */
+        }
+    </style>
+</head>
+<body>
+    <img src="https://image2url.com/r2/default/gifs/1773342276329-64149ca8-9d6c-47aa-a22f-6f6235ea06d5.gif" alt="GIF">
+    
+    <!-- Looping audio -->
+    <audio autoplay loop>
+        <source src="https://image2url.com/r2/default/audio/1773342673458-e121a58c-58df-41d9-800c-e7fa998522a5.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+</body>
+</html>
