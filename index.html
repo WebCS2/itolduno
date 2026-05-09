@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mbappe Out</title>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background-color: #0b0b0b;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    h1 {
+      margin-top: 20px;
+      font-size: 3rem;
+      letter-spacing: 2px;
+    }
+
+    .container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 40px;
+      width: 90%;
+    }
+
+    .image-box {
+      position: relative;
+      max-width: 500px;
+    }
+
+    .image-box img {
+      width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+    }
+
+    .big-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(80deg);
+      font-size: 5rem;
+      font-weight: 900;
+      color: rgba(255, 0, 0, 0.85);
+      text-shadow: 2px 2px 10px black;
+      pointer-events: none;
+    }
+
+    .petition {
+      max-width: 320px;
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    .description {
+      font-size: 0.9rem;
+      color: #ccc;
+      margin-bottom: 20px;
+      line-height: 1.5;
+    }
+
+    button {
+      padding: 12px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: red;
+      color: white;
+      font-weight: bold;
+      margin-bottom: 15px;
+    }
+
+    button:hover {
+      background: darkred;
+    }
+
+    .count {
+      font-size: 1.2rem;
+      font-weight: bold;
+    }
+
+    .disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Mbappe Out</h1>
+
+  <div class="container">
+
+    <div class="image-box">
+      <img src="https://www.image2url.com/r2/default/images/1778327903204-69fcae4c-3de2-454b-9337-b752a8f36d8d.webp" />
+      <div class="big-text">Mbappe</div>
+    </div>
+
+    <div class="petition">
+      <div class="description">
+        Madridistas, make your voice heard. If you believe change is needed, don't stay silent — sign this petition and stand for what you think is best for the club's future.
+      </div>
+
+      <button id="signBtn">Sign Petition</button>
+      <div class="count" id="count">Loading...</div>
+    </div>
+
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
+    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBXKXlusMoJMH2e3B839xqF-Ii61j8tBo",
+      authDomain: "mbappeout-c0f1c.firebaseapp.com",
+      databaseURL: "https://mbappeout-c0f1c-default-rtdb.firebaseio.com",
+      projectId: "mbappeout-c0f1c",
+      storageBucket: "mbappeout-c0f1c.firebasestorage.app",
+      messagingSenderId: "533365630248",
+      appId: "1:533365630248:web:cbe2abc5bfbdd72c9cdc1d",
+      measurementId: "G-RDPM9R9VKK"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const analytics = getAnalytics(app);
+    const db = getDatabase(app);
+    const votesRef = ref(db, "petitionCount");
+
+    const countEl = document.getElementById("count");
+    const btn = document.getElementById("signBtn");
+
+    let hasSigned = localStorage.getItem("signedMbappePetition");
+
+    if (hasSigned) {
+      btn.disabled = true;
+      btn.classList.add("disabled");
+    }
+
+    onValue(votesRef, (snapshot) => {
+      const value = snapshot.val() || 0;
+      countEl.textContent = value + (value === 1 ? " person signed" : " people signed");
+    });
+
+    btn.addEventListener("click", () => {
+      if (hasSigned) return;
+
+      runTransaction(votesRef, (current) => {
+        return (current || 0) + 1;
+      });
+
+      localStorage.setItem("signedMbappePetition", "true");
+      hasSigned = true;
+
+      btn.disabled = true;
+      btn.classList.add("disabled");
+    });
+  </script>
+
+</body>
+</html>
